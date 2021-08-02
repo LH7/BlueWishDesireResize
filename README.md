@@ -5,7 +5,7 @@
 Распакуйте [лоадер](https://github.com/LH7/BlueWishDesireResize/releases) в папку с игрой, и запустите **BlueWishDesireResize.exe**, игра запустится сама.
 
 ### Тестировалось
-Windows 10 x64, версия игры 0.70
+Windows 10 x64, версия игры 0.70, 0.80
 
 ### Ссылки
 [Страница автора игры](https://twitter.com/xxgameroom)

@@ -7,6 +7,9 @@
 Main(@ScriptDir)
 
 Func Main($sGameDir)
+	Local $iTimeoutFindGameWindowMsec = 120000
+	Local $iTimeoutSetStyleWindowMsec = 30000
+
 	$sGameExe = FindFirstFile($sGameDir, "*.exe")
 	if $sGameExe == False Then MessageExit("Cannot find game file =(")
 
@@ -14,8 +17,11 @@ Func Main($sGameDir)
 	$iPID = run($sGameExe)
 	if $iPID == 0 then MessageExit("Cannot run game =(")
 
-	$hWnd = GetHwndFromPID($iPID)
-	SetWindowResizeStyle($hWnd)
+	$hWnd = GetHwndFromPID($iPID, $iTimeoutFindGameWindowMsec, 600, 400)
+	if $hWnd == 0 Then MessageExit("Cannot find game window =(")
+
+	if Not SetWindowResizeStyleTimeout($hWnd, $iTimeoutSetStyleWindowMsec) Then _
+		MessageExit("Cannot set style game window =(")
 EndFunc   ;==>Main
 
 Func FindFirstFile($sDir, $sFilter)
@@ -36,7 +42,7 @@ EndFunc   ;==>CurrentScriptName
 Func GetHwndFromPID($PID, $iTimeoutMSec = 10000, $iW = 100, $iH = 100)
 	Local $hWnd = 0
 	Local $iCurTimeMSec = 0
-	Local $iTimeTryMSec = 100
+	Local $iTimeTryMSec = 500
 	Do
 		Sleep($iTimeTryMSec)
 		Local $winlist = WinList()
@@ -60,12 +66,25 @@ Func WindowIsNormalSize($hWnd, $iW, $iH)
 	return $aSize[0] > $iW AND $aSize[1] > $iH
 EndFunc   ;==>WindowIsNormalSize
 
+Func SetWindowResizeStyleTimeout($hWnd, $iTimeoutMSec = 10000)
+	Local $iCurTimeMSec = 0
+	Local $iTimeTryMSec = 500
+	While Not SetWindowResizeStyle($hWnd)
+		Sleep($iTimeTryMSec)
+		$iCurTimeMSec = $iCurTimeMSec + $iTimeTryMSec
+		If $iCurTimeMSec > $iTimeoutMSec Then Return False
+	Wend
+	Return True
+EndFunc   ;==>SetWindowResizeStyleTimeout
+
 Func SetWindowResizeStyle($hWnd)
 	Local $wStyle = _WinAPI_GetWindowLong($hWnd, $GWL_STYLE)
 	if @error = 1 Then return false
 	$wStyle = BitOR($wStyle, $WS_MAXIMIZEBOX, $WS_THICKFRAME)
 	if _WinAPI_SetWindowLong($hWnd, $GWL_STYLE, $wStyle) = 0 Then return false
-	return true
+	Local $wNewStyle = _WinAPI_GetWindowLong($hWnd, $GWL_STYLE)
+	if @error = 1 Then return false
+	return $wStyle == $wNewStyle
 EndFunc   ;==>SetWindowResizeStyle
 
 Func MessageExit($text)
